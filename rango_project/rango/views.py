@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, response
 from rango.models import Category
 from rango.models import Page
 from rango.forms import CategoryForm, PageForm, UserForm, UserProfileForm
@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from rango.models import UserProfile
 from django.contrib.auth.models import User
 from django.utils import timezone
+
 
 class IndexView(View):
     def get(self, request):
@@ -83,7 +84,21 @@ class AddCategoryView(View):
         
         if form.is_valid():
             form.save(commit=True)
-            return IndexView(request)
+            def get(self, request):
+                category_list = Category.objects.order_by('-likes')[:5]
+                page_list = Page.objects.order_by('-views')[:5]
+    
+                context_dict = {}
+                context_dict['boldmessage'] = 'Crunchy, creamy, cookie, candy, cupcake!'
+                context_dict['categories'] = category_list
+                context_dict['pages'] = page_list
+    
+                visitor_cookie_handler(request)
+    
+                response = render(request, 'rango/index.html', context_dict)
+    
+                return response
+
         else:
             print(form.errors)
         
