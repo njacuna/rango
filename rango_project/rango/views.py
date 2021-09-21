@@ -7,13 +7,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
-# from rango.bing_search import run_query
+from rango.bingsearch import run_query
 from django.views import View
 from django.utils.decorators import method_decorator
 from rango.models import UserProfile
 from django.contrib.auth.models import User
 from django.utils import timezone
-
 
 class IndexView(View):
     def get(self, request):
@@ -62,15 +61,15 @@ class ShowCategoryView(View):
         context_dict = self.create_context_dict(category_name_slug)
         return render(request, 'rango/category.html', context_dict)
     
-    # def post(self, request, category_name_slug):
-    #     context_dict = self.create_context_dict(category_name_slug)
-    #     query = request.POST['query'].strip()
+    def post(self, request, category_name_slug):
+        context_dict = self.create_context_dict(category_name_slug)
+        query = request.POST['query'].strip()
         
-    #     if query:
-    #         context_dict['result_list'] = run_query(query)
-    #         context_dict['query'] = query
+        if query:
+            context_dict['result_list'] = run_query(query)
+            context_dict['query'] = query
         
-    #     return render(request, 'rango/category.html', context_dict)
+        return render(request, 'rango/category.html', context_dict)
 
 class AddCategoryView(View):
     @method_decorator(login_required)
