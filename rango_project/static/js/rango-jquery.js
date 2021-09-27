@@ -2,17 +2,8 @@ $(document).ready(function() {
     // alert('Hello, world!');
     
     $('#about-btn').click(function() {
-        alert("You clicked the button using JQuery!");
+        alert("You clicked the button using JQuer!");
     });
-    
-    $('p').hover(
-        function() {
-            $(this).css('color', 'red');
-        },
-        function() {
-            $(this).css('color', 'black');
-        }
-    );
     
     $('#about-btn').click(function() {
         msgStr = $('#msg').html();
@@ -20,5 +11,4 @@ $(document).ready(function() {
         
         $('#msg').html(msgStr);
     });
-    
 });

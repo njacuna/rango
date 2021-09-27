@@ -1,19 +1,18 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect, response
-from rango.models import Category
-from rango.models import Page
-from rango.forms import CategoryForm, PageForm, UserForm, UserProfileForm
+from rango.models import Category, Page, UserProfile, Theme
+from rango.forms import CategoryForm, PageForm, UserForm, UserProfileForm, ThemeForm
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
-# from rango.bing_search import run_query
+from rango.bingsearch import run_query
 from django.views import View
 from django.utils.decorators import method_decorator
-from rango.models import UserProfile
 from django.contrib.auth.models import User
 from django.utils import timezone
-
+from django.contrib import messages
+from django.contrib.sessions.models import Session
 
 class IndexView(View):
     def get(self, request):
@@ -21,29 +20,30 @@ class IndexView(View):
         page_list = Page.objects.order_by('-views')[:5]
     
         context_dict = {}
-        context_dict['boldmessage'] = 'Crunchy, creamy, cookie, candy, cupcake!'
+        context_dict['boldmessage'] = 'Let\'s explore!'
         context_dict['categories'] = category_list
         context_dict['pages'] = page_list
     
         visitor_cookie_handler(request)
     
-        response = render(request, 'rango/index.html', context_dict)
-    
+        response = render_with_user(request, 'rango/index.html', context_dict)
+        
         return response
 
 class AboutView(View):
     def get(self, request):
-        context_dict = {}
-        context_dict['visits'] = request.session['visits']
-        
-        return render(request, 'rango/about.html', context_dict)
+        visitor_cookie_handler(request)
+        context = {
+            'visits': request.session['visits'],
+            'description': """Rango is a site where you 'rango' links into so
+             that other people may see. Basically, a link sharing site.
+            """
+        }
+
+        return render_with_user(request, 'rango/about.html', context)
 
 class ShowCategoryView(View):
     def create_context_dict(self, category_name_slug):
-        """
-        A helper method that was created to demonstrate the power of class-based views.
-        You can reuse this method in the get() and post() methods!
-        """
         context_dict = {}
         
         try:
@@ -60,23 +60,23 @@ class ShowCategoryView(View):
     
     def get(self, request, category_name_slug):
         context_dict = self.create_context_dict(category_name_slug)
-        return render(request, 'rango/category.html', context_dict)
+        return render_with_user(request, 'rango/category.html', context_dict)
     
-    # def post(self, request, category_name_slug):
-    #     context_dict = self.create_context_dict(category_name_slug)
-    #     query = request.POST['query'].strip()
+    def post(self, request, category_name_slug):
+        context_dict = self.create_context_dict(category_name_slug)
+        query = request.POST['query'].strip()
         
-    #     if query:
-    #         context_dict['result_list'] = run_query(query)
-    #         context_dict['query'] = query
+        if query:
+            context_dict['result_list'] = run_query(query)
+            context_dict['query'] = query
         
-    #     return render(request, 'rango/category.html', context_dict)
+        return render_with_user(request, 'rango/category.html', context_dict)
 
 class AddCategoryView(View):
     @method_decorator(login_required)
     def get(self, request):
         form = CategoryForm()
-        return render(request, 'rango/add_category.html', {'form': form})
+        return render_with_user(request, 'rango/add_category.html', {'form': form})
     
     @method_decorator(login_required)
     def post(self, request):
@@ -84,6 +84,7 @@ class AddCategoryView(View):
         
         if form.is_valid():
             form.save(commit=True)
+            messages.success(request, "Data inserted successfully")
             def get(self, request):
                 category_list = Category.objects.order_by('-likes')[:5]
                 page_list = Page.objects.order_by('-views')[:5]
@@ -95,14 +96,14 @@ class AddCategoryView(View):
     
                 visitor_cookie_handler(request)
     
-                response = render(request, 'rango/index.html', context_dict)
+                response = render_with_user(request, 'rango/index.html', context_dict)
     
                 return response
 
         else:
             print(form.errors)
         
-        return render(request, 'rango/add_category.html', {'form': form})
+        return render_with_user(request, 'rango/add_category.html', {'form': form})
 
 class AddPageView(View):
     def get_category_name(self, category_name_slug):
@@ -122,7 +123,7 @@ class AddPageView(View):
         form = PageForm()
         category = self.get_category_name(category_name_slug)
         context_dict = {'form': form, 'category': category}
-        return render(request, 'rango/add_page.html', context_dict)
+        return render_with_user(request, 'rango/add_page.html', context_dict)
     
     @method_decorator(login_required)
     def post(self, request, category_name_slug):
@@ -141,12 +142,12 @@ class AddPageView(View):
             print(form.errors)
         
         context_dict = {'form': form, 'category': category}
-        return render(request, 'rango/add_page.html', context_dict)
+        return render_with_user(request, 'rango/add_page.html', context_dict)
 
 class RestrictedView(View):
     @method_decorator(login_required)
     def get(self, request):
-        return render(request, 'rango/restricted.html')
+        return render_with_user(request, 'rango/restricted.html')
 
 def get_server_side_cookie(request, cookie, default_val=None):
     val = request.session.get(cookie)
@@ -190,7 +191,7 @@ class RegisterProfileView(View):
     def get(self, request):
         form = UserProfileForm()
         context_dict = {'form': form}
-        return render(request, 'rango/profile_registration.html', context_dict)
+        return render_with_user(request, 'rango/profile_registration.html', context_dict)
     
     @method_decorator(login_required)
     def post(self, request):
@@ -206,7 +207,7 @@ class RegisterProfileView(View):
             print(form.errors)
         
         context_dict = {'form': form}
-        return render(request, 'rango/profile_registration.html', context_dict)
+        return render_with_user(request, 'rango/profile_registration.html', context_dict)
 
 class ProfileView(View):
     def get_user_details(self, username):
@@ -232,7 +233,7 @@ class ProfileView(View):
                         'selecteduser': user,
                         'form': form}
         
-        return render(request, 'rango/profile.html', context_dict)
+        return render_with_user(request, 'rango/profile.html', context_dict)
     
     @method_decorator(login_required)
     def post(self, request, username):
@@ -254,14 +255,14 @@ class ProfileView(View):
                             'selecteduser': user,
                             'form': form}
         
-        return render(request, 'rango/profile.html', context_dict)
+        return render_with_user(request, 'rango/profile.html', context_dict)
 
 class ListProfilesView(View):
     @method_decorator(login_required)
     def get(self, request):
         profiles = UserProfile.objects.all()
         
-        return render(request,
+        return render_with_user(request,
                       'rango/list_profiles.html',
                       {'userprofile_list': profiles})
 
@@ -302,7 +303,7 @@ class CategorySuggestionView(View):
         if len(category_list) == 0:
             category_list = Category.objects.order_by('-likes')
         
-        return render(request, 'rango/categories.html', {'categories': category_list})
+        return render_with_user(request, 'rango/categories.html', {'categories': category_list})
 
 # View added for the Add button when adding a page to a category.
 class SearchAddPageView(View):
@@ -324,4 +325,56 @@ class SearchAddPageView(View):
                                        url=url)
         
         pages = Page.objects.filter(category=category).order_by('-views')
-        return render(request, 'rango/page_listing.html', {'pages': pages})
+        return render_with_user(request, 'rango/page_listing.html', {'pages': pages})
+
+class SettingsView(View):
+    @method_decorator(login_required)
+    def get(self, request, username):
+        color = get_user_color(username)
+        form = ThemeForm({ 'color': color })
+
+        context = { 'form': form }
+        return render_with_user(request, 'rango/settings.html', 
+            context=context, username=username)
+
+    @method_decorator(login_required)
+    def post(self, request, username):
+        color = get_user_color(username)
+        form = ThemeForm(request.POST, request.FILES, instance=color)
+
+        if form.is_valid():
+            form.save(commit=True)
+
+        context = { 'form': form }
+
+        return render_with_user(request, 'rango/settings.html', 
+            context=context, username=username)
+
+def render_with_user(request, template, context={}, username=''):
+
+    if request.user.is_authenticated:
+        try:
+            user = get_user(request.user)
+            color = get_user_color(request.user)
+            current_user = UserProfile.objects.get_or_create(user=user)[0]
+
+            context['current_user'] = current_user
+            context['color'] = color.color
+            context['color'] = color
+
+        except User.DoesNotExist:
+            pass
+
+    return render(request, template, context)
+
+def get_user(username):
+    try:
+        user = User.objects.get(username=username)
+        return user
+    except User.DoesNotExist:
+        pass
+
+def get_user_color(username):
+    user = get_user(username)
+    color = Theme.objects.get_or_create(user=user)[0]
+    return color

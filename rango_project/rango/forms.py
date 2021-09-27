@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
-from rango.models import Page, Category, UserProfile
+from django.forms import fields
+from rango.models import Page, Category, UserProfile, Theme
 
 class CategoryForm(forms.ModelForm):
     name = forms.CharField(max_length=Category.NAME_MAX_LENGTH, help_text="Please enter the category name.")
@@ -44,3 +45,13 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ('website', 'picture')
+
+class ThemeForm(forms.ModelForm):
+
+    colors = [('yellow','yellow'),('dark','dark'),('default','default')]
+    color = forms.ChoiceField(choices=colors)
+
+    class Meta:
+        model = Theme
+        fields = ('color', )
+        exclude = ('user', )

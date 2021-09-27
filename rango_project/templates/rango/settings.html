@@ -1,0 +1,36 @@
+{% extends 'rango/base.html' %}
+{% load staticfiles %}
+
+{% block title %}
+    Settings
+{% endblock %}
+
+{% block body_block%}
+<div class="jumbotron p-4 gray-on-dark">
+    <div class="container">
+        <h2 class="jumbotron-heading">Settings</h2>
+    </div>
+</div>
+<div>
+    <h3>Select your Theme</h3>
+    <br>
+    <form id="theme_form" method="post" 
+        action="{% url 'rango:settings' user.username %}"
+        enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for hidden in form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+        {% for field in form.visible_fields %}
+            {{ field.help_text }}
+            {{ field }}
+            <br>
+        {% endfor %}
+        <br>
+        <input type="submit" name="submit" value="Save">
+    </form>
+    <br>
+    <br>
+    <h4>Current Theme: </h4><p>{{ color.color }}</p>
+</div>
+{% endblock %}

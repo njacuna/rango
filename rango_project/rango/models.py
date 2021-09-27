@@ -33,7 +33,7 @@ class Page(models.Model):
     title = models.CharField(max_length=TITLE_MAX_LENGTH)
     url = models.URLField()
     views = models.IntegerField(default=0)
-    last_visit = models.DateTimeField(blank=True)
+    last_visit = models.DateTimeField(blank=True, help_text="Date and Time last visited (YYYY-MM-DD HH:MM:SS)")
     
     def save(self, *args, **kwargs):
         self.last_visit = timezone.now()
@@ -43,9 +43,17 @@ class Page(models.Model):
         return self.title
 
 class UserProfile(models.Model):
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     website = models.URLField(blank=True)
     picture = models.ImageField(upload_to='profile_images', blank=True)
     
+    def __str__(self):
+        return self.user.username
+
+class Theme(models.Model):
+    color = models.CharField(max_length=1000)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
     def __str__(self):
         return self.user.username

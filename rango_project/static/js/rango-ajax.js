@@ -24,7 +24,7 @@ $(document).ready(function() {
     
     /* Code added for handling page add clicks */
     $('.rango-page-add').click(function() {
-        alert('hello');
+        alert('Page has been added');
         var categoryid = $(this).attr('data-categoryid');
         var title = $(this).attr('data-title');
         var url = $(this).attr('data-url');

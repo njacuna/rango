@@ -13,7 +13,7 @@ urlpatterns = [
     # path('login/', views.user_login, name='login'),
     path('restricted/', views.RestrictedView.as_view(), name='restricted'),
     # path('logout/', views.user_logout, name='logout'),
-    # path('search/', views.search, name='search'),
+    # path('search/', views., name='search'),
     path('goto/', views.GotoView.as_view(), name='goto'),
     path('register_profile/', views.RegisterProfileView.as_view(), name='register_profile'),
     path('profile/<username>/', views.ProfileView.as_view(), name='profile'),
@@ -21,4 +21,6 @@ urlpatterns = [
     path('like_category/', views.LikeCategoryView.as_view(), name='like_category'),
     path('suggest/', views.CategorySuggestionView.as_view(), name='suggest'),
     path('search_add_page/', views.SearchAddPageView.as_view(), name='search_add_page'),
+    path('settings/<username>', views.SettingsView.as_view(), name='settings'),
+    # path('theme/', views.ThemesView.as_view(), name='theme'),
 ]
